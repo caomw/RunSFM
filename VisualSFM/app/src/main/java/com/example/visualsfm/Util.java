@@ -655,6 +655,7 @@ public final class Util {
 
             String out = output_path + "/" + basename + ".rd.jpg";
             UndistortImage(in, cameras.get(i), out);
+            System.gc();
         }
     }
 
@@ -690,7 +691,7 @@ public final class Util {
         List<Point> points = new ArrayList<Point>();
         List<String> files = ReadListFile(list_file);
         ReadBundleFile(bundle_file, cameras, points);
-
+        System.gc();
         UndistortImages(pmvs_dir, files, cameras);
         WriteNewFiles(pmvs_dir, files, cameras, points);
     }
@@ -700,6 +701,7 @@ public final class Util {
         List<Camera> cameras = new ArrayList<Camera>();
         List<Point> points = new ArrayList<Point>();
         ReadBundleFile(bundle_file, cameras, points);
+        System.gc();
         WriteVisFile(vis_file, cameras, points);
     }
 

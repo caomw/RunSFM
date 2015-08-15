@@ -31,8 +31,6 @@ public class MainActivity extends Activity {
     public native void match(String input, String output);
     public native void bundler(String input, String option, String match, String output);
     public native void bundle2pmvs(String list, String bundle, String output);
-    public native void radiaundistort(String input, String output, String pmvs);
-    public native void bundle2vis(String input, String output);
     public native void genOption(String input);
     public native void cmvs(String input, String clusterNum, String coreNum);
     public native void pmvs2(String input, String output);
@@ -43,7 +41,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         Handler mhandler = new Handler();
-        mhandler.postDelayed(new WorkThread("/storage/sdcard/kermit"), 1000);
+        mhandler.postDelayed(new WorkThread("/storage/sdcard0/kermit"), 1000);
     }
 
     public class WorkThread implements Runnable {
@@ -98,6 +96,7 @@ public class MainActivity extends Activity {
                     Log.d(TAG, "match end");
 
                     // Bundler - bundle adjustment
+                    // bug : exit at the end of bundler (memory limit?)
                     Util.createOption(dir + "/options.txt");
                     Util.mkdir(dir + "/bundle");
                     Util.mkdir(dir + "/prepare");
@@ -107,7 +106,8 @@ public class MainActivity extends Activity {
                     Log.d(TAG, "bundler end");
 
                     bundle2pmvs(dir + "/list.txt", dir + "/bundle/bundle.out", dir + "/pmvs");
-                    radiaundistort(dir + "/list.txt", dir + "/bundle/bundle.out", dir + "/pmvs");
+                    // bug : memory limit
+                    Util.radiaundistort(dir + "/list.txt", dir + "/bundle/bundle.out", dir + "/pmvs");
 
                     Util.mkdir(dir + "/pmvs/txt");
                     Util.mkdir(dir + "/pmvs/visualize");
@@ -127,7 +127,8 @@ public class MainActivity extends Activity {
                         }
                     }
 
-                    bundle2vis(dir + "/pmvs/bundle.rd.out", dir + "/pmvs/vis.dat");
+                    // bug : memory limit
+                    Util.bundle2vis(dir + "/pmvs/bundle.rd.out", dir + "/pmvs/vis.dat");
 
                     // CMVS-PMVS - Cluster-Patch Multiview Stereo
                     Log.d(TAG, "pmvs-cmvs start");
