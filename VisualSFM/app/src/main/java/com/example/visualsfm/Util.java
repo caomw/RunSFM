@@ -693,7 +693,9 @@ public final class Util {
         ReadBundleFile(bundle_file, cameras, points);
         System.gc();
         UndistortImages(pmvs_dir, files, cameras);
+        System.gc();
         WriteNewFiles(pmvs_dir, files, cameras, points);
+        System.gc();
     }
 
     public static void bundle2vis(String bundle_file, String vis_file)
@@ -703,6 +705,7 @@ public final class Util {
         ReadBundleFile(bundle_file, cameras, points);
         System.gc();
         WriteVisFile(vis_file, cameras, points);
+        System.gc();
     }
 
 

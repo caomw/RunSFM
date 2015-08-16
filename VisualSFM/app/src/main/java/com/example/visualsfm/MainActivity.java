@@ -21,7 +21,12 @@ public class MainActivity extends Activity {
     private static final boolean SIFT_ON = false;
     private static final boolean MATCHER_ON = false;
     private static final boolean BUNDLER_ON = false;
+
+    // IO file and format conversion
     private static final boolean BUNDLER2PMVS_ON = false;
+    private static final boolean RADIALUNDISTORT_ON = false;
+    private static final boolean BUNDLER2VIS_ON = false;
+
     private static final boolean PMVS_CMVS_ON = true;
 
     static
@@ -64,6 +69,7 @@ public class MainActivity extends Activity {
         public void run() {
             try {
                 if(!isRunning) {
+                    isRunning = true;
                     // SIFT - feature extraction
                     if(SIFT_ON) {
                         Log.d(TAG, "sift start");
@@ -107,24 +113,35 @@ public class MainActivity extends Activity {
                     }
 
                     // Bundler - bundle adjustment
-                    // bug : exit at the end of bundler (memory limit?)
+                    // bug : exit abruptly (memory limit?)
                     if (BUNDLER_ON) {
+                        Log.d(TAG, "bundler start");
                         Util.createOption(dir + "/options.txt");
                         Util.mkdir(dir + "/bundle");
                         Util.mkdir(dir + "/prepare");
 
-                        Log.d(TAG, "bundler start");
                         bundler(dir + "/list.txt", dir + "/options.txt", dir, dir + "/bundle");
                         Log.d(TAG, "bundler end");
                     }
 
                     // Bundler2PMVS
                     if(BUNDLER2PMVS_ON) {
+                        Log.d(TAG, "bundle2pmvs start");
                         bundle2pmvs(dir + "/list.txt", dir + "/bundle/bundle.out", dir + "/pmvs");
+                        Log.d(TAG, "bundle2pmvs start");
+                    }
 
-                        // bug : memory limit
+                    // Radiaundistort
+                    // bug : memory limit
+                    if(RADIALUNDISTORT_ON) {
+                        Log.d(TAG, "radiaundistort start");
                         Util.radiaundistort(dir + "/list.txt", dir + "/bundle/bundle.out", dir + "/pmvs");
+                        Log.d(TAG, "radiaundistort end");
+                    }
 
+                    // Bundler2vis
+                    if(BUNDLER2VIS_ON) {
+                        Log.d(TAG, "bundle2vis start");
                         Util.mkdir(dir + "/pmvs/txt");
                         Util.mkdir(dir + "/pmvs/visualize");
                         Util.mkdir(dir + "/pmvs/models");
@@ -145,6 +162,7 @@ public class MainActivity extends Activity {
 
                         // bug : memory limit
                         Util.bundle2vis(dir + "/pmvs/bundle.rd.out", dir + "/pmvs/vis.dat");
+                        Log.d(TAG, "bundle2vis end");
                     }
 
                     // CMVS-PMVS - Cluster-Patch Multiview Stereo
@@ -158,7 +176,6 @@ public class MainActivity extends Activity {
                             pmvs2(dir + "/pmvs/", name);
                         }
                         Log.d(TAG, "pmvs-cmvs end");
-                        isRunning = true;
                     }
                 }
             } catch (IOException e) {
