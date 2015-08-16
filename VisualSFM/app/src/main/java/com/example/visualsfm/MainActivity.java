@@ -17,6 +17,13 @@ import android.util.Log;
 
 public class MainActivity extends Activity {
     private static final String TAG = "visualsfm";
+
+    private static final boolean SIFT_ON = false;
+    private static final boolean MATCHER_ON = false;
+    private static final boolean BUNDLER_ON = false;
+    private static final boolean BUNDLER2PMVS_ON = false;
+    private static final boolean PMVS_CMVS_ON = true;
+
     static
     {
         System.loadLibrary("sift");
@@ -58,89 +65,101 @@ public class MainActivity extends Activity {
             try {
                 if(!isRunning) {
                     // SIFT - feature extraction
-                    Log.d(TAG, "sift start");
-                    FileInputStream fis = new FileInputStream(dir + "/list_tmp.txt");
-                    BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+                    if(SIFT_ON) {
+                        Log.d(TAG, "sift start");
+                        FileInputStream fis = new FileInputStream(dir + "/list_tmp.txt");
+                        BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 
-                    FileOutputStream fos = new FileOutputStream(dir + "/list.txt");
-                    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-                    String line = null;
-                    while ((line = br.readLine()) != null) {
-                        String jpg = line.trim();
-                        String pgm = Util.jpg2pgm(jpg);
-                        sift(pgm);
-                        String info = jhead(jpg);
-                        String focal = Util.extractInfo(info);
-                        bw.write(jpg + " 0 " + focal + "\n");
-                    }
-                    br.close();
-                    bw.close();
-                    fis.close();
-                    fos.close();
+                        FileOutputStream fos = new FileOutputStream(dir + "/list.txt");
+                        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+                        String line = null;
+                        while ((line = br.readLine()) != null) {
+                            String jpg = line.trim();
+                            String pgm = Util.jpg2pgm(jpg);
+                            sift(pgm);
+                            String info = jhead(jpg);
+                            String focal = Util.extractInfo(info);
+                            bw.write(jpg + " 0 " + focal + "\n");
+                        }
+                        br.close();
+                        bw.close();
+                        fis.close();
+                        fos.close();
 
-                    Util.scanDir(dir, "key", dir + "/list_keys.txt");
-                    fis = new FileInputStream(dir + "/list_keys.txt");
-                    br = new BufferedReader(new InputStreamReader(fis));
-                    line = null;
-                    while ((line = br.readLine()) != null) {
-                        String key = line.trim();
-                        Util.gzipFile(key, key + ".gz");
+                        Util.scanDir(dir, "key", dir + "/list_keys.txt");
+                        fis = new FileInputStream(dir + "/list_keys.txt");
+                        br = new BufferedReader(new InputStreamReader(fis));
+                        line = null;
+                        while ((line = br.readLine()) != null) {
+                            String key = line.trim();
+                            Util.gzipFile(key, key + ".gz");
+                        }
+                        br.close();
+                        fis.close();
+                        Log.d(TAG, "sift end");
                     }
-                    br.close();
-                    fis.close();
-                    Log.d(TAG, "sift end");
 
                     // Matcher - feature matching
-                    Log.d(TAG, "match start");
-                    match(dir + "/list_keys.txt", dir + "/matches.init.txt");
-                    Log.d(TAG, "match end");
+                    if(MATCHER_ON) {
+                        Log.d(TAG, "match start");
+                        match(dir + "/list_keys.txt", dir + "/matches.init.txt");
+                        Log.d(TAG, "match end");
+                    }
 
                     // Bundler - bundle adjustment
                     // bug : exit at the end of bundler (memory limit?)
-                    Util.createOption(dir + "/options.txt");
-                    Util.mkdir(dir + "/bundle");
-                    Util.mkdir(dir + "/prepare");
+                    if (BUNDLER_ON) {
+                        Util.createOption(dir + "/options.txt");
+                        Util.mkdir(dir + "/bundle");
+                        Util.mkdir(dir + "/prepare");
 
-                    Log.d(TAG, "bundler start");
-                    bundler(dir + "/list.txt", dir + "/options.txt", dir, dir + "/bundle");
-                    Log.d(TAG, "bundler end");
-
-                    bundle2pmvs(dir + "/list.txt", dir + "/bundle/bundle.out", dir + "/pmvs");
-                    // bug : memory limit
-                    Util.radiaundistort(dir + "/list.txt", dir + "/bundle/bundle.out", dir + "/pmvs");
-
-                    Util.mkdir(dir + "/pmvs/txt");
-                    Util.mkdir(dir + "/pmvs/visualize");
-                    Util.mkdir(dir + "/pmvs/models");
-
-                    File directory = new File(dir + "/pmvs");
-                    File[] files = directory.listFiles();
-                    for(File file:files){
-                        if(file.getName().contains(".rd.jpg")) {
-                            String name = file.getName().substring(file.getName().length() - 10, file.getName().length() - 7);
-                            Util.mv(file.getAbsolutePath(), dir + "/pmvs/visualize/" + String.format("%08d.jpg", Integer.valueOf(name)));
-                        }
-                    }
-                    for(File file:files){
-                        if(file.getName().length() == 12 && file.getName().contains(".txt")) {
-                            Util.mv(file.getAbsolutePath(), dir + "/pmvs/txt/" + file.getName());
-                        }
+                        Log.d(TAG, "bundler start");
+                        bundler(dir + "/list.txt", dir + "/options.txt", dir, dir + "/bundle");
+                        Log.d(TAG, "bundler end");
                     }
 
-                    // bug : memory limit
-                    Util.bundle2vis(dir + "/pmvs/bundle.rd.out", dir + "/pmvs/vis.dat");
+                    // Bundler2PMVS
+                    if(BUNDLER2PMVS_ON) {
+                        bundle2pmvs(dir + "/list.txt", dir + "/bundle/bundle.out", dir + "/pmvs");
+
+                        // bug : memory limit
+                        Util.radiaundistort(dir + "/list.txt", dir + "/bundle/bundle.out", dir + "/pmvs");
+
+                        Util.mkdir(dir + "/pmvs/txt");
+                        Util.mkdir(dir + "/pmvs/visualize");
+                        Util.mkdir(dir + "/pmvs/models");
+
+                        File directory = new File(dir + "/pmvs");
+                        File[] files = directory.listFiles();
+                        for (File file : files) {
+                            if (file.getName().contains(".rd.jpg")) {
+                                String name = file.getName().substring(file.getName().length() - 10, file.getName().length() - 7);
+                                Util.mv(file.getAbsolutePath(), dir + "/pmvs/visualize/" + String.format("%08d.jpg", Integer.valueOf(name)));
+                            }
+                        }
+                        for (File file : files) {
+                            if (file.getName().length() == 12 && file.getName().contains(".txt")) {
+                                Util.mv(file.getAbsolutePath(), dir + "/pmvs/txt/" + file.getName());
+                            }
+                        }
+
+                        // bug : memory limit
+                        Util.bundle2vis(dir + "/pmvs/bundle.rd.out", dir + "/pmvs/vis.dat");
+                    }
 
                     // CMVS-PMVS - Cluster-Patch Multiview Stereo
-                    Log.d(TAG, "pmvs-cmvs start");
-                    cmvs(dir + "/pmvs/", "100", "8");
-                    genOption(dir + "/pmvs/");
-                    for(int i = 0; i < 1; i++) {
-                        String name = String.format("option-%04d", i);
-                        String path = dir + "/pmvs/" + name;
-                        pmvs2(dir + "/pmvs/", name);
+                    if(PMVS_CMVS_ON) {
+                        Log.d(TAG, "pmvs-cmvs start");
+                        cmvs(dir + "/pmvs/", "100", "8");
+                        genOption(dir + "/pmvs/");
+                        for (int i = 0; i < 1; i++) {
+                            String name = String.format("option-%04d", i);
+                            String path = dir + "/pmvs/" + name;
+                            pmvs2(dir + "/pmvs/", name);
+                        }
+                        Log.d(TAG, "pmvs-cmvs end");
+                        isRunning = true;
                     }
-                    Log.d(TAG, "pmvs-cmvs end");
-                    isRunning = true;
                 }
             } catch (IOException e) {
                 e.printStackTrace();

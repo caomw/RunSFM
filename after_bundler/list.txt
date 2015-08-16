@@ -1,0 +1,11 @@
+/storage/sdcard0/kermit/kermit000.jpg 0 660.80306
+/storage/sdcard0/kermit/kermit001.jpg 0 660.80306
+/storage/sdcard0/kermit/kermit002.jpg 0 660.80306
+/storage/sdcard0/kermit/kermit003.jpg 0 660.80306
+/storage/sdcard0/kermit/kermit004.jpg 0 660.80306
+/storage/sdcard0/kermit/kermit005.jpg 0 660.80306
+/storage/sdcard0/kermit/kermit006.jpg 0 660.80306
+/storage/sdcard0/kermit/kermit007.jpg 0 660.80306
+/storage/sdcard0/kermit/kermit008.jpg 0 660.80306
+/storage/sdcard0/kermit/kermit009.jpg 0 660.80306
+/storage/sdcard0/kermit/kermit010.jpg 0 660.80306
